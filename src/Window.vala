@@ -33,7 +33,10 @@ class Window: Gtk.ApplicationWindow {
 		add_action(new_tab_action);
 		var open_action = new SimpleAction("open", null);
 		open_action.activate.connect(() => {
-			var dialog = new Gtk.FileChooserDialog(null, this, Gtk.FileChooserAction.OPEN, "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
+			var dialog = new Gtk.FileChooserDialog(null,
+												   this, Gtk.FileChooserAction.OPEN,
+												   "Cancel", Gtk.ResponseType.CANCEL,
+												   "Open", Gtk.ResponseType.ACCEPT);
 			dialog.select_multiple = true;
 			if (dialog.run() == Gtk.ResponseType.ACCEPT) {
 				foreach (var file in dialog.get_files()) {

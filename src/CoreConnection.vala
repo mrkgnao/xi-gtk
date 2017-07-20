@@ -96,7 +96,7 @@ class CoreConnection {
 			generator.to_stream(core_stdin);
 			core_stdin.write("\n".data);
 			core_stdin.flush();
-			//stdout.printf("front-end to core: %s\n", generator.to_data(null));
+			stdout.printf("front-end to core: %s\n", generator.to_data(null));
 		} catch (Error error) {
 			critical(error.message);
 		}
@@ -239,6 +239,8 @@ class CoreConnection {
 			core_stdout = create_input_stream(core_stdout_fd, receive);
 		} catch (SpawnError error) {
 			stderr.printf("spawn error: %s\n", error.message);
+			stderr.printf("Most likely this means xi-core is not on
+                            your PATH");
 		}
 	}
 }

@@ -33,7 +33,7 @@ class Application: Gtk.Application {
 		});
 		add_action(quit_action);
 
-		set_accels_for_action("win.new-tab", {"<Primary>N"});
+		set_accels_for_action("win.new-tab", {"<Primary>T"});
 		set_accels_for_action("win.open", {"<Primary>O"});
 		set_accels_for_action("win.save", {"<Primary>S"});
 		set_accels_for_action("win.save-as", {"<Primary><Shift>S"});

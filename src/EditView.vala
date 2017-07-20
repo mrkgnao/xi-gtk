@@ -47,6 +47,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 	public Gtk.ScrollablePolicy vscroll_policy { set; get; }
 
+	public bool in_insert_state { private set; get; default = true; }
+
 	// private helper methods
 	private void convert_xy(double x, double y, out int line, out int column) {
 		line = int.max(0, (int)((y - y_offset) / line_height) + first_line);
@@ -63,7 +65,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
 		var settings = new Settings("org.gnome.desktop.interface");
-		var font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
+		// var font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
+		var font_description = Pango.FontDescription.from_string("Iosevka 14");
 		var metrics = get_pango_context().get_metrics(font_description, null);
 		double ascent = Pango.units_to_double(metrics.get_ascent());
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
@@ -81,6 +84,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		} else {
 			label = "untitled";
 		}
+		this.notify["in_insert_state"].connect((s, p) => stdout.printf("mode changed"));
 	}
 
 	private static void add_move_binding(Gtk.BindingSet binding_set, uint key, Gdk.ModifierType modifier, string command) {
@@ -169,7 +173,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		return Gdk.EVENT_STOP;
 	}
 
-	public override bool key_press_event(Gdk.EventKey event) {
+	public override bool key_release_event(Gdk.EventKey event) {
 		if (base.key_press_event(event)) {
 			return Gdk.EVENT_STOP;
 		}
@@ -178,18 +182,65 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 		return Gdk.EVENT_PROPAGATE;
 	}
-	public override bool key_release_event(Gdk.EventKey event) {
+
+	public override bool key_press_event(Gdk.EventKey event) {
+		stdout.printf("released: keycode %d\n", event.hardware_keycode);
+
+		// Normal mode
+		if(!in_insert_state) {
+			// 'i' pressed
+			if (event.hardware_keycode == 31) {
+				stdout.printf("Entering insert mode\n");
+				in_insert_state = true;
+				stdout.printf("%s\n", in_insert_state.to_string());
+				label = (file == null ? "untitled" : file.get_basename()) + " (insert)";
+			}
+
+			// 'h' pressed
+			switch (event.hardware_keycode) {
+			case 43:
+				core_connection.send_edit(view_id, "move_left");
+				break;
+			case 44:
+				core_connection.send_edit(view_id, "move_down");
+				break;
+			case 45:
+				core_connection.send_edit(view_id, "move_up");
+				break;
+			case 46:
+				core_connection.send_edit(view_id, "move_right");
+				break;
+			}
+
+			return Gdk.EVENT_STOP;
+		}
+
 		if (base.key_release_event(event)) {
 			return Gdk.EVENT_STOP;
 		}
+
 		if (im_context.filter_keypress(event)) {
 			return Gdk.EVENT_STOP;
 		}
+
+		// To normal mode
+		if (event.hardware_keycode == 9) {
+			stdout.printf("Entering normal mode");
+			in_insert_state = false;
+			stdout.printf("%s\n", in_insert_state.to_string());
+
+			label = (file == null ? "untitled" : file.get_basename()) + " (normal)";
+			return Gdk.EVENT_STOP;
+
+		}
+
 		return Gdk.EVENT_PROPAGATE;
 	}
 
 	private void handle_commit(string str) {
-		core_connection.send_insert(view_id, str);
+		if(in_insert_state) {
+			core_connection.send_insert(view_id, str);
+		}
 	}
 
 	public override bool button_press_event(Gdk.EventButton event) {
