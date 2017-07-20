@@ -191,24 +191,50 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			// 'i' pressed
 			if (event.hardware_keycode == 31) {
 				stdout.printf("Entering insert mode\n");
-				in_insert_state = true;
 				stdout.printf("%s\n", in_insert_state.to_string());
+				in_insert_state = true;
 				label = (file == null ? "untitled" : file.get_basename()) + " (insert)";
 			}
 
-			// 'h' pressed
 			switch (event.hardware_keycode) {
+			case 26:
+				// 'e'
+				core_connection.send_edit(view_id, "move_word_right");
+				break;
+			case 56:
+				// 'b'
+				core_connection.send_edit(view_id, "move_word_left");
+				break;
+
 			case 43:
+				// h
 				core_connection.send_edit(view_id, "move_left");
 				break;
 			case 44:
+				// j
 				core_connection.send_edit(view_id, "move_down");
 				break;
 			case 45:
+				// k
 				core_connection.send_edit(view_id, "move_up");
 				break;
 			case 46:
+				// l
 				core_connection.send_edit(view_id, "move_right");
+				break;
+			case 13:
+				// $
+				core_connection.send_edit(view_id, "move_to_right_end_of_line");
+				break;
+			case 15:
+				// ^
+				core_connection.send_edit(view_id, "move_to_left_end_of_line");
+				break;
+			case 38:
+				// a
+				core_connection.send_edit(view_id, "move_right");
+				in_insert_state = true;
+				label = (file == null ? "untitled" : file.get_basename()) + " (insert)";
 				break;
 			}
 
